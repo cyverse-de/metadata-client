@@ -1,3 +1,4 @@
+#!groovy
 def repo = "metadata-client"
 def dockerUser = "discoenv"
 
