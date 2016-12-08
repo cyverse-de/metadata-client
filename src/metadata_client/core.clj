@@ -8,6 +8,31 @@
 (defprotocol Client
   "A client library for the Metadata API."
 
+  (filter-by-avus
+    [_ username target-types target-ids avus]
+    "Filters the given target IDs by returning a list of any that have metadata with the given
+     `attrs` and `values`.")
+
+  (list-avus
+    [_ username target-type target-id]
+    [_ username target-type target-id opts]
+    "Lists all AVUs associated with the target item.")
+
+  (update-avus
+    [_ username target-type target-id body]
+    "Adds or updates Metadata AVUs on the given target item.")
+
+  (set-avus
+    [_ username target-type target-id body]
+    "Sets Metadata AVUs on the given target item.
+     Any AVUs not included in the request will be deleted. If the AVUs are omitted, then all AVUs for the
+     given target ID will be deleted.")
+
+  (copy-metadata-avus
+    [_ username target-type target-id dest-items]
+    "Copies all Metadata Template AVUs from the data item with the ID given in the URL to other data
+     items sent in the request body.")
+
   (delete-ontology
     [_ username ontology-version]
     "Marks an Ontology as deleted in the database.")
@@ -35,11 +60,6 @@
     "Filters an Ontology Hierarchy, rooted at the given `root-iri`, returning only the
      hierarchy's leaf-classes that are associated with the given targets.")
 
-  (filter-by-avus
-    [_ username target-types target-ids avus]
-    "Filters the given target IDs by returning a list of any that have metadata with the given
-     `attrs` and `values`.")
-
   (filter-hierarchy-targets
     [_ username ontology-version root-iri attr target-types target-ids]
     "Filters the given target IDs by returning only those that are associated with any Ontology
@@ -48,27 +68,7 @@
   (filter-unclassified
     [_ username ontology-version root-iri attr target-types target-ids]
     "Filters the given target IDs by returning a list of any that are not associated with any
-     Ontology classes of the hierarchy rooted at the given `root-iri`.")
-
-  (list-avus
-    [_ username target-type target-id]
-    [_ username target-type target-id opts]
-    "Lists all AVUs associated with the target item.")
-
-  (set-avus
-    [_ username target-type target-id body]
-    "Sets Metadata AVUs on the given target item.
-     Any AVUs not included in the request will be deleted. If the AVUs are omitted, then all AVUs for the
-     given target ID will be deleted.")
-
-  (update-avus
-    [_ username target-type target-id body]
-    "Adds or updates Metadata AVUs on the given target item.")
-
-  (copy-metadata-avus
-    [_ username target-type target-id dest-items]
-    "Copies all Metadata Template AVUs from the data item with the ID given in the URL to other data
-     items sent in the request body."))
+     Ontology classes of the hierarchy rooted at the given `root-iri`."))
 
 (defn- metadata-url
   [base-url & components]
@@ -94,6 +94,43 @@
 
 (deftype MetadataClient [base-url]
   Client
+
+  (filter-by-avus
+    [_ username target-types target-ids avus]
+    (->> (http/post (metadata-url base-url "avus" "filter-targets")
+                    (post-options (json/encode {:target-types target-types
+                                                :target-ids   target-ids
+                                                :avus         avus})
+                                  {:user username}
+                                  :as :json))
+         :body
+         :target-ids
+         (map uuidify)))
+
+  (list-avus
+    [_ username target-type target-id]
+    (http/get (metadata-url base-url "avus" target-type target-id)
+              (get-options {:user username})))
+
+  (list-avus
+    [_ username target-type target-id {:keys [as] :or {as :stream}}]
+    (http/get (metadata-url base-url "avus" target-type target-id)
+              (get-options {:user username} :as as)))
+
+  (update-avus
+    [_ username target-type target-id body]
+    (http/post (metadata-url base-url "avus" target-type target-id)
+               (post-options body {:user username})))
+
+  (set-avus
+    [_ username target-type target-id body]
+    (http/put (metadata-url base-url "avus" target-type target-id)
+              (put-options body {:user username})))
+
+  (copy-metadata-avus
+    [_ username target-type target-id dest-items]
+    (http/post (metadata-url base-url "avus" target-type target-id "copy")
+               (post-options (json/encode {:targets dest-items}) {:user username})))
 
   (delete-ontology
     [_ username ontology-version]
@@ -137,18 +174,6 @@
                (post-options (json/encode {:target-types target-types :target-ids target-ids})
                              {:user username :attr attr})))
 
-  (filter-by-avus
-    [_ username target-types target-ids avus]
-    (->> (http/post (metadata-url base-url "avus" "filter-targets")
-                    (post-options (json/encode {:target-types target-types
-                                                :target-ids   target-ids
-                                                :avus         avus})
-                                  {:user username}
-                                  :as :json))
-         :body
-         :target-ids
-         (map uuidify)))
-
   (filter-hierarchy-targets
     [_ username ontology-version root-iri attr target-types target-ids]
     (->> (http/post (metadata-url base-url "ontologies" ontology-version root-iri "filter-targets")
@@ -167,32 +192,7 @@
                                   :as :json))
          :body
          :target-ids
-         (map uuidify)))
-
-  (list-avus
-    [_ username target-type target-id]
-    (http/get (metadata-url base-url "avus" target-type target-id)
-              (get-options {:user username})))
-
-  (list-avus
-    [_ username target-type target-id {:keys [as] :or {as :stream}}]
-    (http/get (metadata-url base-url "avus" target-type target-id)
-              (get-options {:user username} :as as)))
-
-  (set-avus
-    [_ username target-type target-id body]
-    (http/put (metadata-url base-url "avus" target-type target-id)
-              (put-options body {:user username})))
-
-  (update-avus
-    [_ username target-type target-id body]
-    (http/post (metadata-url base-url "avus" target-type target-id)
-               (post-options body {:user username})))
-
-  (copy-metadata-avus
-    [_ username target-type target-id dest-items]
-    (http/post (metadata-url base-url "avus" target-type target-id "copy")
-               (post-options (json/encode {:targets dest-items}) {:user username}))))
+         (map uuidify))))
 
 (defn new-metadata-client [base-url]
   (MetadataClient. base-url))
