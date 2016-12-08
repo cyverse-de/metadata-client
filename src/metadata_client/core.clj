@@ -70,7 +70,7 @@
     "Copies all Metadata Template AVUs from the data item with the ID given in the URL to other data
      items sent in the request body."))
 
-(defn- metadata-url-encoded
+(defn- metadata-url
   [base-url & components]
   (log/debug "using metadata base URL" base-url)
   (str (apply curl/url base-url (map curl/url-encode components))))
@@ -97,23 +97,23 @@
 
   (delete-ontology
     [_ username ontology-version]
-    (http/delete (metadata-url-encoded base-url "admin" "ontologies" ontology-version)
+    (http/delete (metadata-url base-url "admin" "ontologies" ontology-version)
                  (delete-options {:user username})))
 
   (list-ontologies
     [_ username]
-    (-> (http/get (metadata-url-encoded base-url "ontologies")
+    (-> (http/get (metadata-url base-url "ontologies")
                   (get-options {:user username} :as :json))
         :body))
 
   (list-hierarchies
     [_ username ontology-version]
-    (http/get (metadata-url-encoded base-url "ontologies" ontology-version)
+    (http/get (metadata-url base-url "ontologies" ontology-version)
               (get-options {:user username})))
 
   (filter-hierarchies
     [_ username ontology-version attrs target-type target-id]
-    (->> (http/post (metadata-url-encoded base-url "ontologies" ontology-version "filter")
+    (->> (http/post (metadata-url base-url "ontologies" ontology-version "filter")
                     (post-options (json/encode {:attrs attrs :type target-type :id target-id})
                                   {:user username}
                                   :as :json))
@@ -121,7 +121,7 @@
 
   (filter-targets-by-ontology-search
     [_ username ontology-version attrs search-term target-types target-ids]
-    (->> (http/post (metadata-url-encoded base-url "ontologies" ontology-version "filter-targets")
+    (->> (http/post (metadata-url base-url "ontologies" ontology-version "filter-targets")
                     (post-options (json/encode {:attrs        attrs
                                                 :target-types target-types
                                                 :target-ids   target-ids})
@@ -133,13 +133,13 @@
 
   (filter-hierarchy
     [_ username ontology-version root-iri attr target-types target-ids]
-    (http/post (metadata-url-encoded base-url "ontologies" ontology-version root-iri "filter")
+    (http/post (metadata-url base-url "ontologies" ontology-version root-iri "filter")
                (post-options (json/encode {:target-types target-types :target-ids target-ids})
                              {:user username :attr attr})))
 
   (filter-by-avus
     [_ username target-types target-ids avus]
-    (->> (http/post (metadata-url-encoded base-url "avus" "filter-targets")
+    (->> (http/post (metadata-url base-url "avus" "filter-targets")
                     (post-options (json/encode {:target-types target-types
                                                 :target-ids   target-ids
                                                 :avus         avus})
@@ -151,7 +151,7 @@
 
   (filter-hierarchy-targets
     [_ username ontology-version root-iri attr target-types target-ids]
-    (->> (http/post (metadata-url-encoded base-url "ontologies" ontology-version root-iri "filter-targets")
+    (->> (http/post (metadata-url base-url "ontologies" ontology-version root-iri "filter-targets")
                     (post-options (json/encode {:target-types target-types :target-ids target-ids})
                                   {:user username :attr attr}
                                   :as :json))
@@ -161,7 +161,7 @@
 
   (filter-unclassified
     [_ username ontology-version root-iri attr target-types target-ids]
-    (->> (http/post (metadata-url-encoded base-url "ontologies" ontology-version root-iri "filter-unclassified")
+    (->> (http/post (metadata-url base-url "ontologies" ontology-version root-iri "filter-unclassified")
                     (post-options (json/encode {:target-types target-types :target-ids target-ids})
                                   {:user username :attr attr}
                                   :as :json))
@@ -171,27 +171,27 @@
 
   (list-avus
     [_ username target-type target-id]
-    (http/get (metadata-url-encoded base-url "avus" target-type target-id)
+    (http/get (metadata-url base-url "avus" target-type target-id)
               (get-options {:user username})))
 
   (list-avus
     [_ username target-type target-id {:keys [as] :or {as :stream}}]
-    (http/get (metadata-url-encoded base-url "avus" target-type target-id)
+    (http/get (metadata-url base-url "avus" target-type target-id)
               (get-options {:user username} :as as)))
 
   (set-avus
     [_ username target-type target-id body]
-    (http/put (metadata-url-encoded base-url "avus" target-type target-id)
+    (http/put (metadata-url base-url "avus" target-type target-id)
               (put-options body {:user username})))
 
   (update-avus
     [_ username target-type target-id body]
-    (http/post (metadata-url-encoded base-url "avus" target-type target-id)
+    (http/post (metadata-url base-url "avus" target-type target-id)
                (post-options body {:user username})))
 
   (copy-metadata-avus
     [_ username target-type target-id dest-items]
-    (http/post (metadata-url-encoded base-url "avus" target-type target-id "copy")
+    (http/post (metadata-url base-url "avus" target-type target-id "copy")
                (post-options (json/encode {:targets dest-items}) {:user username}))))
 
 (defn new-metadata-client [base-url]
