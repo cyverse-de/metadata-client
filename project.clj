@@ -1,4 +1,4 @@
-(defproject org.cyverse/metadata-client "2.8.2-SNAPSHOT"
+(defproject org.cyverse/metadata-client "3.0.0-SNAPSHOT"
   :description "Client for the metadata service"
   :url "https://github.com/cyverse-de/metadata-client"
   :license {:name "BSD"
