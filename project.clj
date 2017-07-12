@@ -10,4 +10,5 @@
                  [clj-http "2.0.0"]
                  [com.cemerick/url "0.1.1" :exclusions [com.cemerick/clojurescript.test]]
                  [cheshire "5.5.0"]
+                 [medley "1.0.0"]
                  [org.cyverse/kameleon "3.0.0"]])

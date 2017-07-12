@@ -10,6 +10,8 @@ A client library for the CyVerse Discovery Environment metadata service.
 (def client (mcc/new-metadata-client base-uri))
 
 ;; Metadata AVU operations.
+(mcc/find-avus client username {:attribute attribute :target-type target-type :value value :unit unit})
+(mcc/find-avus client username {:attribute [attr1 attr2] :target-type [tt1 tt2] :value [v1 v2] :unit [u1 u2]})
 (mcc/list-avus client username target-type target-id)
 (mcc/update-avus client username target-type target-id request-body)
 (mcc/set-avus client username target-type target-id request-body)
