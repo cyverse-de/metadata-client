@@ -1,5 +1,6 @@
 (ns metadata-client.core
-  (:use [kameleon.uuids :only [uuidify]])
+  (:use [kameleon.uuids :only [uuidify]]
+        [medley.core :only [remove-vals]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as json]
             [clj-http.client :as http]
@@ -7,6 +8,11 @@
 
 (defprotocol Client
   "A client library for the Metadata API."
+
+  (find-avus
+    [_ username criteria]
+    "Searches for AVUs that match the given search criteria. Available criteria are `:attribute`, `:target-type`
+     `:value`, and `:unit`. Each criterion can be either an acceptable match or a list of acceptable matches.")
 
   (filter-by-avus
     [_ username target-types target-ids avus]
@@ -94,6 +100,13 @@
 
 (deftype MetadataClient [base-url]
   Client
+
+  (find-avus
+    [_ username params]
+    (let [params (remove-vals nil? (select-keys params [:attribute :target-type :value :unit]))]
+      (:body (http/get (metadata-url base-url "avus")
+                       (get-options (assoc params :user username)
+                                    :as :json)))))
 
   (filter-by-avus
     [_ username target-types target-ids avus]
