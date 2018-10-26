@@ -14,6 +14,10 @@
     "Searches for AVUs that match the given search criteria. Available criteria are `:attribute`, `:target-type`
      `:value`, and `:unit`. Each criterion can be either an acceptable match or a list of acceptable matches.")
 
+  (delete-avus
+    [_ username target-types target-ids avus]
+    "Deletes AVUs matching those in the given `avus` list from the given `target-ids`.")
+
   (filter-by-avus
     [_ username target-types target-ids avus]
     "Filters the given target IDs by returning a list of any that have metadata with the given
@@ -107,6 +111,15 @@
       (:body (http/get (metadata-url base-url "avus")
                        (get-options (assoc params :user username)
                                     :as :json)))))
+
+  (delete-avus
+    [_ username target-types target-ids avus]
+    (http/post (metadata-url base-url "avus" "deleter")
+               (post-options (json/encode {:target-types target-types
+                                           :target-ids   target-ids
+                                           :avus         avus})
+                             {:user username}))
+    nil)
 
   (filter-by-avus
     [_ username target-types target-ids avus]
