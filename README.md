@@ -17,6 +17,7 @@ A client library for the CyVerse Discovery Environment metadata service.
 (mcc/set-avus client username target-type target-id request-body)
 (mcc/copy-metadata-avus client username target-type target-id dest-targets)
 (mcc/filter-by-avus client username target-types target-ids avus)
+(mcc/delete-avus client username target-types target-ids avus)
 
 ;; Ontology operations.
 (mcc/list-ontologies client username)
