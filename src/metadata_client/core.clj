@@ -53,6 +53,7 @@
 
   (list-hierarchies
     [_ username ontology-version]
+    [_ username ontology-version opts]
     "List Ontology Hierarchies saved for the given `ontology-version`.")
 
   (filter-hierarchies
@@ -134,9 +135,8 @@
          (map uuidify)))
 
   (list-avus
-    [_ username target-type target-id]
-    (http/get (metadata-url base-url "avus" target-type target-id)
-              (get-options {:user username})))
+    [client username target-type target-id]
+    (list-avus client username target-type target-id {:as :stream}))
 
   (list-avus
     [_ username target-type target-id {:keys [as] :or {as :stream}}]
@@ -170,9 +170,13 @@
         :body))
 
   (list-hierarchies
-    [_ username ontology-version]
+    [client username ontology-version]
+    (list-hierarchies client username ontology-version {}))
+
+  (list-hierarchies
+    [_ username ontology-version {:keys [as] :or {as :stream}}]
     (http/get (metadata-url base-url "ontologies" ontology-version)
-              (get-options {:user username})))
+              (get-options {:user username} :as as)))
 
   (filter-hierarchies
     [_ username ontology-version attrs target-type target-id]
@@ -196,9 +200,11 @@
 
   (filter-hierarchy
     [_ username ontology-version root-iri attr target-types target-ids]
-    (http/post (metadata-url base-url "ontologies" ontology-version root-iri "filter")
-               (post-options (json/encode {:target-types target-types :target-ids target-ids})
-                             {:user username :attr attr})))
+    (->> (http/post (metadata-url base-url "ontologies" ontology-version root-iri "filter")
+                    (post-options (json/encode {:target-types target-types :target-ids target-ids})
+                                  {:user username :attr attr}
+                                  :as :json))
+         :body))
 
   (filter-hierarchy-targets
     [_ username ontology-version root-iri attr target-types target-ids]
