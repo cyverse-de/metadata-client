@@ -30,10 +30,12 @@
 
   (update-avus
     [_ username target-type target-id body]
+    [_ username target-type target-id body opts]
     "Adds or updates Metadata AVUs on the given target item.")
 
   (set-avus
     [_ username target-type target-id body]
+    [_ username target-type target-id body opts]
     "Sets Metadata AVUs on the given target item.
      Any AVUs not included in the request will be deleted. If the AVUs are omitted, then all AVUs for the
      given target ID will be deleted.")
@@ -144,14 +146,22 @@
               (get-options {:user username} :as as)))
 
   (update-avus
-    [_ username target-type target-id body]
+    [client username target-type target-id body]
+    (update-avus client username target-type target-id body {:as :stream}))
+
+  (update-avus
+    [_ username target-type target-id body {:keys [as] :or {as :stream}}]
     (http/post (metadata-url base-url "avus" target-type target-id)
-               (post-options body {:user username})))
+               (post-options body {:user username} :as as)))
 
   (set-avus
-    [_ username target-type target-id body]
+    [client username target-type target-id body]
+    (set-avus client username target-type target-id body {:as :stream}))
+
+  (set-avus
+    [_ username target-type target-id body {:keys [as] :or {as :stream}}]
     (http/put (metadata-url base-url "avus" target-type target-id)
-              (put-options body {:user username})))
+              (put-options body {:user username} :as as)))
 
   (copy-metadata-avus
     [_ username target-type target-id dest-items]
